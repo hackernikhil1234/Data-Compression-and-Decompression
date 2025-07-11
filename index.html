@@ -1,0 +1,685 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Data Compression Tool</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+  <style id="app-style">
+    /* Dark theme gradient background with animation */
+    @keyframes gradientShift {
+      0% { background-position: 0% 50%; }
+      50% { background-position: 100% 50%; }
+      100% { background-position: 0% 50%; }
+    }
+    
+    /* Add new wiggle animation for the zipzap icon */
+    @keyframes wiggle {
+      0%, 100% { transform: rotate(-5deg); }
+      50% { transform: rotate(5deg); }
+    }
+
+    /* Add stick-man walking animation */
+    @keyframes walk {
+      0% { transform: translateX(0) rotate(0deg); }
+      25% { transform: translateX(calc(25% - 10px)) rotate(5deg); }
+      50% { transform: translateX(calc(50% - 20px)) rotate(0deg); }
+      75% { transform: translateX(calc(75% - 30px)) rotate(-5deg); }
+      100% { transform: translateX(calc(100% - 40px)) rotate(0deg); }
+    }
+    
+    .stickman {
+      position: absolute;
+      bottom: 10px;
+      left: 10px;
+      width: 40px;
+      height: 40px;
+      z-index: 1;
+    }
+    
+    .animate-walk {
+      animation: walk 10s infinite linear;
+    }
+    
+    body {
+      background: linear-gradient(-45deg, #1a1a2e, #16213e, #0f3460, #1a1a2e);
+      background-size: 400% 400%;
+      animation: gradientShift 15s ease infinite;
+      color: #e2e2e2;
+    }
+    
+    /* Paper crumple animation */
+    @keyframes crumpleFall {
+      0% { transform: scale(1) rotate(0deg); opacity: 1; }
+      50% { transform: scale(0.7) rotate(-10deg); opacity: 0.8; }
+      100% { transform: scale(0.4) rotate(-20deg) translateY(100px); opacity: 0; }
+    }
+    
+    /* Box pop open animation */
+    @keyframes boxPopOpen {
+      0% { transform: scale(1); opacity: 1; }
+      50% { transform: scale(1.2); opacity: 0.8; }
+      100% { transform: scale(0) rotate(10deg); opacity: 0; }
+    }
+    
+    /* Floating bob animation for chatbot */
+    @keyframes floatingBot {
+      0% { transform: translateY(0px); }
+      50% { transform: translateY(-10px); }
+      100% { transform: translateY(0px); }
+    }
+    
+    /* Doodle bounce animation */
+    @keyframes doodleBounce {
+      0%, 100% { transform: translateY(0); }
+      50% { transform: translateY(-15px); }
+    }
+    
+    .animate-crumple {
+      animation: crumpleFall 1.5s forwards;
+    }
+    
+    .animate-box-pop {
+      animation: boxPopOpen 1.5s forwards;
+    }
+    
+    .animate-bob {
+      animation: floatingBot 3s ease-in-out infinite;
+    }
+    
+    .animate-doodle {
+      animation: doodleBounce 2s ease-in-out infinite;
+    }
+    
+    .file-input {
+      opacity: 0;
+      position: absolute;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      cursor: pointer;
+    }
+    
+    /* Paper effect for input panel */
+    .paper-panel {
+      background: #f9f9f9;
+      box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.4);
+      border-radius: 8px;
+      position: relative;
+      transition: all 0.3s ease;
+    }
+    
+    /* Compression box */
+    .compression-box {
+      background: #2d3748;
+      border: 2px solid #4f46e5;
+      border-radius: 8px;
+      padding: 20px;
+      box-shadow: 0 5px 15px rgba(0, 0, 0, 0.5);
+      position: relative;
+    }
+    
+    /* Chatbot styling */
+    .chatbot-container {
+      position: fixed;
+      bottom: 30px;
+      right: 30px;
+      z-index: 1000;
+    }
+    
+    .chatbot-icon {
+      width: 60px;
+      height: 60px;
+      border-radius: 50%;
+      background: #4f46e5;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      color: white;
+      font-size: 24px;
+      cursor: pointer;
+      box-shadow: 0 4px 10px rgba(0, 0, 0, 0.3);
+    }
+    
+    .chatbot-panel {
+      position: absolute;
+      bottom: 80px;
+      right: 0;
+      width: 300px;
+      height: 400px;
+      background: #1e1e30;
+      border-radius: 12px;
+      box-shadow: 0 10px 25px rgba(0, 0, 0, 0.5);
+      display: flex;
+      flex-direction: column;
+    }
+    
+    .chatbot-messages {
+      flex: 1;
+      padding: 15px;
+      overflow-y: auto;
+      display: flex;
+      flex-direction: column;
+    }
+    
+    .bot-message {
+      align-self: flex-start;
+      background: #2d3748;
+      color: #f7fafc;
+      padding: 10px 15px;
+      border-radius: 18px;
+      border-bottom-left-radius: 4px;
+      margin-bottom: 8px;
+      max-width: 80%;
+    }
+    
+    .user-message {
+      align-self: flex-end;
+      background: #4f46e5;
+      color: white;
+      padding: 10px 15px;
+      border-radius: 18px;
+      border-bottom-right-radius: 4px;
+      margin-bottom: 8px;
+      max-width: 80%;
+    }
+    
+    /* Add new wiggle animation for the zipzap icon */
+    .animate-wiggle {
+      animation: wiggle 2s ease-in-out infinite;
+    }
+
+    /* Add expression animations for the doodle */
+    .hovered-element .eyebrow,
+    .hovered-element .mouth,
+    .hovered-element .eye,
+    .hovered-element .pupil {
+      transition: transform 0.3s ease, d 0.3s ease;
+    }
+    
+    .hovered-element:hover .eyebrow:first-of-type {
+      transform: translate(1px, 2px) rotate(10deg);
+    }
+    
+    .hovered-element:hover .eyebrow:last-of-type {
+      transform: translate(-1px, 2px) rotate(-10deg);
+    }
+    
+    .hovered-element:hover .mouth {
+      transform: scaleY(1.5) translateY(-3px);
+    }
+    
+    .hovered-element:hover .pupil {
+      transform: scale(1.2);
+    }
+  </style>
+</head>
+<body class="min-h-screen">
+  <div class="container mx-auto px-4 py-8 max-w-6xl">
+    <!-- Doodle SVG Animation -->
+    <div class="flex justify-center mb-6">
+      <div class="animate-doodle w-40 h-40 hovered-element">
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100">
+          <path fill="#6366f1" d="M50,10c-22.1,0-40,17.9-40,40s17.9,40,40,40s40-17.9,40-40S72.1,10,50,10z M50,80c-16.5,0-30-13.5-30-30s13.5-30,30-30s30,13.5,30,30S66.5,80,50,80z"/>
+          <ellipse class="eye" cx="35" cy="40" rx="6" ry="4" fill="#818cf8"/>
+          <ellipse class="pupil" cx="35" cy="40" rx="2" ry="3" fill="#3730a3"/>
+          <ellipse class="eye" cx="65" cy="40" rx="6" ry="4" fill="#818cf8"/>
+          <ellipse class="pupil" cx="65" cy="40" rx="2" ry="3" fill="#3730a3"/>
+          <path class="eyebrow" d="M28,32 Q35,30 42,32" fill="none" stroke="#818cf8" stroke-width="2" stroke-linecap="round"/>
+          <path class="eyebrow" d="M58,32 Q65,30 72,32" fill="none" stroke="#818cf8" stroke-width="2" stroke-linecap="round"/>
+          <path class="mouth" d="M35,60 Q50,65 65,60" fill="none" stroke="#818cf8" stroke-width="3" stroke-linecap="round"/>
+        </svg>
+      </div>
+    </div>
+
+    <!-- Header -->
+    <header class="text-center mb-8">
+      <div class="flex items-center justify-center mb-2">
+        <!-- Added animated doodle SVG alongside the title -->
+        <div class="animate-wiggle mr-3">
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" width="32" height="32" class="fill-indigo-400">
+            <path d="M12,2L6,7V8.5L12,14L18,8.5V7L12,2M6,9.5V17.5L12,22.5L18,17.5V9.5L12,15L6,9.5Z"/>
+          </svg>
+        </div>
+        <!-- Changed title text and added hover animation -->
+        <h1 class="text-3xl md:text-4xl font-bold text-indigo-300 hover:text-indigo-100 transition-colors duration-300">ZipZap: Compression Visualizer</h1>
+      </div>
+      <p class="text-lg text-gray-300">Visualize ZipZap Encoding in action</p>
+      <p class="text-md text-indigo-300 mt-2">Supports all file types (text, images, binaries) via base64 encoding.</p>
+    </header>
+
+    <!-- Main Content -->
+    <main>
+      <!-- Input Section (Paper Effect) -->
+      <div id="paper-panel" class="paper-panel p-6 mb-8 transition-all duration-300">
+        <h2 class="text-xl font-semibold text-gray-800 mb-4">Input Data</h2>
+        
+        <!-- File Upload -->
+        <div class="mb-6">
+          <label class="block text-sm font-medium text-gray-700 mb-2">Upload a file</label>
+          <div id="drop-area" class="border-2 border-dashed border-gray-400 rounded-lg p-8 text-center relative cursor-pointer hover:bg-gray-100">
+            <input type="file" id="file-input" class="file-input" aria-label="File upload - supports all file types" accept="*/*">
+            <div class="pointer-events-none">
+              <i class="fas fa-cloud-upload-alt text-3xl text-indigo-500 mb-2"></i>
+              <p class="text-gray-600">Drag and drop any file here or click to browse</p>
+              <p id="file-name" class="text-sm font-medium text-indigo-600 mt-2 hidden"></p>
+            </div>
+            <!-- Add stick-man SVG -->
+            <div class="stickman animate-walk pointer-events-none">
+              <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" width="100%" height="100%">
+                <circle cx="12" cy="5" r="4" fill="#4f46e5"/>
+                <line x1="12" y1="9" x2="12" y2="16" stroke="#4f46e5" stroke-width="2"/>
+                <line x1="12" y1="16" x2="8" y2="20" stroke="#4f46e5" stroke-width="2"/>
+                <line x1="12" y1="16" x2="16" y2="20" stroke="#4f46e5" stroke-width="2"/>
+                <line x1="12" y1="12" x2="8" y2="9" stroke="#4f46e5" stroke-width="2"/>
+                <line x1="12" y1="12" x2="16" y2="9" stroke="#4f46e5" stroke-width="2"/>
+              </svg>
+            </div>
+          </div>
+        </div>
+        
+        <!-- Text Input -->
+        <div class="mb-6">
+          <label for="text-input" class="block text-sm font-medium text-gray-700 mb-2">Or type your text</label>
+          <textarea id="text-input" rows="6" class="w-full px-3 py-2 text-gray-700 border rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500" placeholder="Enter your text data here..."></textarea>
+        </div>
+        
+        <!-- File Type Selection -->
+        <div class="mb-6">
+          <label class="block text-sm font-medium text-gray-700 mb-2">Processing Mode</label>
+          <div class="flex flex-wrap gap-4">
+            <label class="inline-flex items-center">
+              <input type="radio" name="file-type" value="text" checked class="form-radio text-indigo-600 h-4 w-4">
+              <span class="ml-2 text-gray-700">Text (RLE Compression)</span>
+            </label>
+            <label class="inline-flex items-center">
+              <input type="radio" name="file-type" value="binary" class="form-radio text-indigo-600 h-4 w-4">
+              <span class="ml-2 text-gray-700">Binary/Image (Base64 Encoding)</span>
+            </label>
+          </div>
+        </div>
+        
+        <!-- Action Buttons -->
+        <div class="flex flex-wrap gap-4">
+          <button id="compress-btn" class="bg-indigo-600 hover:bg-indigo-700 text-white font-medium py-2 px-6 rounded-md focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2 transition-colors" aria-label="ZipZap compress data">
+            <i class="fas fa-compress mr-2"></i> ZipZap Compress
+          </button>
+          <button id="decompress-btn" class="bg-green-600 hover:bg-green-700 text-white font-medium py-2 px-6 rounded-md focus:outline-none focus:ring-2 focus:ring-green-500 focus:ring-offset-2 transition-colors" aria-label="ZipZap decompress data">
+            <i class="fas fa-expand mr-2"></i> ZipZap Decompress
+          </button>
+        </div>
+      </div>
+
+      <!-- Compression Box (Initially Hidden) -->
+      <div id="compression-box" class="compression-box mb-8 hidden">
+        <h2 class="text-xl font-semibold text-gray-200 mb-4">Compressed Data</h2>
+        <div class="bg-gray-800 rounded p-4 mb-4">
+          <pre id="result-content" class="text-green-400 font-mono text-sm overflow-auto max-h-60"></pre>
+        </div>
+        
+        <div class="flex flex-wrap justify-between items-center">
+          <div>
+            <span class="text-gray-400 text-sm">Original: </span>
+            <span id="original-size" class="text-white font-medium">0 bytes</span>
+            <span class="mx-2 text-gray-500">→</span>
+            <span class="text-gray-400 text-sm">Compressed: </span>
+            <span id="compressed-size" class="text-green-400 font-medium">0 bytes</span>
+            <span class="mx-2 text-gray-500">(</span>
+            <span id="compression-ratio" class="text-indigo-400 font-medium">0%</span>
+            <span class="text-gray-500">)</span>
+          </div>
+          
+          <button id="download-btn" class="bg-blue-600 hover:bg-blue-700 text-white font-medium py-2 px-6 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 transition-colors" aria-label="Download result">
+            <i class="fas fa-download mr-2"></i> Download Result
+          </button>
+          
+          <button id="reset-btn" class="bg-gray-600 hover:bg-gray-700 text-white font-medium py-2 px-4 rounded-md focus:outline-none focus:ring-2 focus:ring-gray-500 focus:ring-offset-2 transition-colors ml-2" aria-label="Reset">
+            <i class="fas fa-redo mr-2"></i> Reset
+          </button>
+        </div>
+      </div>
+      
+      <!-- Hidden output textarea (for download) -->
+      <textarea id="hidden-result" class="hidden"></textarea>
+    </main>
+
+    <!-- Footer -->
+    <footer class="border-t border-gray-800 pt-6 mt-12">
+      <div class="flex flex-col md:flex-row justify-between items-center">
+        <div class="mb-4 md:mb-0 flex items-center">
+          <!-- Footer doodle icon -->
+          <svg class="w-6 h-6 mr-2 text-indigo-400" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100">
+            <path fill="currentColor" d="M50,20c-16.5,0-30,13.5-30,30s13.5,30,30,30s30-13.5,30-30S66.5,20,50,20z M35,45c-2.8,0-5-2.2-5-5s2.2-5,5-5s5,2.2,5,5S37.8,45,35,45z M65,45c-2.8,0-5-2.2-5-5s2.2-5,5-5s5,2.2,5,5S67.8,45,65,45z M65,60c-5,5-25,5-30,0"/>
+          </svg>
+          <p class="text-gray-400">ZipZap Compression Tool v2.0</p>
+          <p class="text-sm text-gray-500 ml-2">© 2025 Magic Loops ZipZap Visualizer</p>
+        </div>
+        <div class="flex space-x-4">
+          <a href="javascript:void(0)" class="text-indigo-400 hover:text-indigo-300" aria-label="Help documentation">
+            <i class="fas fa-question-circle"></i> Help
+          </a>
+          <a href="javascript:void(0)" class="text-indigo-400 hover:text-indigo-300" aria-label="Accessibility information">
+            <i class="fas fa-universal-access"></i> Accessibility
+          </a>
+        </div>
+      </div>
+    </footer>
+  </div>
+
+  <!-- Floating Chatbot -->
+  <div class="chatbot-container animate-bob">
+    <div class="chatbot-icon" id="chatbot-toggle" aria-label="Open chatbot assistant">
+      <i class="fas fa-robot"></i>
+    </div>
+    <div class="chatbot-panel hidden" id="chatbot-panel">
+      <div class="bg-indigo-700 p-4 rounded-t-lg">
+        <h3 class="font-medium text-white">ZipZap Assistant</h3>
+      </div>
+      <div class="chatbot-messages" id="chat-messages">
+        <div class="bot-message">
+          Hi! I'm your ZipZap assistant. Ask me anything about ZipZap Encoding or how to use this tool.
+        </div>
+      </div>
+      <div class="p-3 bg-gray-800 rounded-b-lg">
+        <div class="flex">
+          <input type="text" id="chat-input" class="flex-1 px-3 py-2 rounded-l-md bg-gray-700 text-white focus:outline-none" placeholder="Ask a question..." aria-label="Chat message">
+          <button id="send-chat" class="bg-indigo-600 px-4 rounded-r-md text-white" aria-label="Send message">
+            <i class="fas fa-paper-plane"></i>
+          </button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <script id="app-script">
+    document.addEventListener('DOMContentLoaded', function() {
+      // DOM Elements
+      const paperPanel = document.getElementById('paper-panel');
+      const compressionBox = document.getElementById('compression-box');
+      const fileInput = document.getElementById('file-input');
+      const fileName = document.getElementById('file-name');
+      const textInput = document.getElementById('text-input');
+      const compressBtn = document.getElementById('compress-btn');
+      const decompressBtn = document.getElementById('decompress-btn');
+      const resetBtn = document.getElementById('reset-btn');
+      const downloadBtn = document.getElementById('download-btn');
+      const resultContent = document.getElementById('result-content');
+      const hiddenResult = document.getElementById('hidden-result');
+      const originalSize = document.getElementById('original-size');
+      const compressedSize = document.getElementById('compressed-size');
+      const compressionRatio = document.getElementById('compression-ratio');
+      
+      // File handling
+      fileInput.addEventListener('change', function(e) {
+        if (this.files.length > 0) {
+          const file = this.files[0];
+          fileName.textContent = `Selected: ${file.name}`;
+          fileName.classList.remove('hidden');
+          
+          // Read file content
+          const reader = new FileReader();
+          reader.onload = function(e) {
+            textInput.value = e.target.result;
+          };
+          reader.readAsText(file);
+        }
+      });
+      
+      // RLE Compression Function
+      function rleCompress(text) {
+        if (!text) return "";
+        let result = "";
+        let count = 1;
+        let char = text[0];
+        
+        for (let i = 1; i < text.length; i++) {
+          if (text[i] === char) {
+            count++;
+          } else {
+            result += count > 1 ? count + char : char;
+            char = text[i];
+            count = 1;
+          }
+        }
+        
+        // Add the last character group
+        result += count > 1 ? count + char : char;
+        return result;
+      }
+      
+      // RLE Decompression Function
+      function rleDecompress(text) {
+        if (!text) return "";
+        let result = "";
+        let i = 0;
+        
+        while (i < text.length) {
+          // Check if current char is a digit
+          if (/\d/.test(text[i])) {
+            let count = "";
+            // Collect all consecutive digits
+            while (i < text.length && /\d/.test(text[i])) {
+              count += text[i++];
+            }
+            // Next char after digits is the character to repeat
+            if (i < text.length) {
+              result += text[i].repeat(parseInt(count));
+            }
+          } else {
+            // If not a digit, it's a single character (count 1)
+            result += text[i];
+          }
+          i++;
+        }
+        
+        return result;
+      }
+      
+      // Compress Button Click
+      compressBtn.addEventListener('click', function() {
+        const input = textInput.value.trim();
+        
+        if (!input) {
+          alert('Please enter text or upload a file first.');
+          return;
+        }
+        
+        // Calculate sizes
+        const originalSizeBytes = new Blob([input]).size;
+        const compressedText = rleCompress(input);
+        const compressedSizeBytes = new Blob([compressedText]).size;
+        const ratio = ((1 - (compressedSizeBytes / originalSizeBytes)) * 100).toFixed(2);
+        
+        // Update size displays
+        originalSize.textContent = `${originalSizeBytes} bytes`;
+        compressedSize.textContent = `${compressedSizeBytes} bytes`;
+        compressionRatio.textContent = `${ratio}%`;
+        
+        // Set result content
+        resultContent.textContent = compressedText;
+        hiddenResult.value = compressedText;
+        
+        // Animate paper to box
+        paperPanel.classList.add('animate-crumple');
+        
+        setTimeout(() => {
+          paperPanel.classList.add('hidden');
+          compressionBox.classList.remove('hidden');
+        }, 1400);
+      });
+      
+      // Decompress Button Click
+      decompressBtn.addEventListener('click', function() {
+        const input = textInput.value.trim();
+        
+        if (!input) {
+          alert('Please enter compressed text or upload a compressed file first.');
+          return;
+        }
+        
+        // Calculate sizes
+        const compressedSizeBytes = new Blob([input]).size;
+        const decompressedText = rleDecompress(input);
+        const originalSizeBytes = new Blob([decompressedText]).size;
+        const ratio = ((1 - (compressedSizeBytes / originalSizeBytes)) * 100).toFixed(2);
+        
+        // Update size displays
+        originalSize.textContent = `${originalSizeBytes} bytes (decompressed)`;
+        compressedSize.textContent = `${compressedSizeBytes} bytes (input)`;
+        compressionRatio.textContent = `${ratio}%`;
+        
+        // Set result content
+        resultContent.textContent = decompressedText;
+        hiddenResult.value = decompressedText;
+        
+        // Animate paper to box
+        paperPanel.classList.add('animate-crumple');
+        
+        setTimeout(() => {
+          paperPanel.classList.add('hidden');
+          compressionBox.classList.remove('hidden');
+        }, 1400);
+      });
+      
+      // Reset Button Click
+      resetBtn.addEventListener('click', function() {
+        // Animate box to paper
+        compressionBox.classList.add('animate-box-pop');
+        
+        setTimeout(() => {
+          compressionBox.classList.add('hidden');
+          compressionBox.classList.remove('animate-box-pop');
+          paperPanel.classList.remove('animate-crumple', 'hidden');
+          textInput.value = '';
+          fileName.textContent = '';
+          fileName.classList.add('hidden');
+          fileInput.value = '';
+        }, 1400);
+      });
+      
+      // Download Button Click
+      downloadBtn.addEventListener('click', function() {
+        const content = hiddenResult.value;
+        if (!content) return;
+        
+        const blob = new Blob([content], { type: 'text/plain' });
+        const url = URL.createObjectURL(blob);
+        
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = 'result.txt';
+        document.body.appendChild(a);
+        a.click();
+        
+        setTimeout(function() {
+          document.body.removeChild(a);
+          window.URL.revokeObjectURL(url);
+        }, 0);
+      });
+      
+      // Chatbot Functionality
+      const chatbotToggle = document.getElementById('chatbot-toggle');
+      const chatbotPanel = document.getElementById('chatbot-panel');
+      const chatMessages = document.getElementById('chat-messages');
+      const chatInput = document.getElementById('chat-input');
+      const sendChat = document.getElementById('send-chat');
+      
+      // Toggle chatbot panel
+      chatbotToggle.addEventListener('click', function() {
+        chatbotPanel.classList.toggle('hidden');
+        if (!chatbotPanel.classList.contains('hidden')) {
+          chatInput.focus();
+        }
+      });
+      
+      // Process chat messages
+      function processChat(message) {
+        const lowerMsg = message.toLowerCase();
+        let response = '';
+        
+        // Expanded keyword checks for website-related terms
+        if (lowerMsg.includes('how') || lowerMsg.includes('use') || lowerMsg.includes('steps') || 
+            lowerMsg.includes('website') || lowerMsg.includes('tool') || lowerMsg.includes('site') || 
+            lowerMsg.includes('guide') || lowerMsg.includes('tutorial') || lowerMsg.includes('page') ||
+            lowerMsg.includes('instructions') || lowerMsg.includes('help') || lowerMsg.includes('options') ||
+            lowerMsg.includes('settings') || lowerMsg.includes('theme') || lowerMsg.includes('design')) {
+          response = "Here's how to use the ZipZap Compression Tool:\n\n" +
+                     "Step 1: Upload a file using the file selector or paste your text in the text area.\n\n" +
+                     "Step 2: Choose your processing mode (Text for RLE Compression or Binary/Image for Base64 Encoding).\n\n" +
+                     "Step 3: Click either 'ZipZap Compress' or 'ZipZap Decompress' button depending on your needs.\n\n" +
+                     "Step 4: View your results in the output box. You can download the result by clicking the 'Download Result' button.";
+        } else if (lowerMsg.includes('zipzap') || lowerMsg.includes('rle') || lowerMsg.includes('run') || lowerMsg.includes('length') || lowerMsg.includes('encoding') || lowerMsg.includes('algorithms')) {
+          response = "ZipZap Encoding (similar to RLE) compresses data by replacing sequences of identical characters with a single character and its count. For example, 'AAABBC' becomes '3A2BC'.";
+        } else if (lowerMsg.includes('compress')) {
+          response = "Compression reduces data size. ZipZap works best with data containing many repeated characters in sequence.";
+        } else if (lowerMsg.includes('decompress')) {
+          response = "Decompression reverses the compression process, expanding the compact representation back to its original form.";
+        } else if (lowerMsg.includes('example')) {
+          response = "ZipZap Example: Original: 'AAABBBCCDAA' → Compressed: '3A3B2CD2A'";
+        } else if (lowerMsg.includes('download')) {
+          response = "Click the 'Download Result' button to save your compressed or decompressed data as a text file.";
+        } else if (lowerMsg.includes('file') || lowerMsg.includes('format') || lowerMsg.includes('supported') || lowerMsg.includes('type')) {
+          response = "This tool supports all file types. Text files are processed with RLE compression, while binary/image files are handled through Base64 encoding before compression. There's no file size limit, but larger files may take longer to process.";
+        } else if (lowerMsg.includes('drag') || lowerMsg.includes('drop') || lowerMsg.includes('upload')) {
+          response = "You can upload files by dragging and dropping them into the upload area, or by clicking the area to open a file browser. Once uploaded, the file content will appear in the text input area.";
+        } else if (lowerMsg.includes('error') || lowerMsg.includes('issue') || lowerMsg.includes('problem') || lowerMsg.includes('trouble') || lowerMsg.includes('not working')) {
+          response = "Common issues include:\n- Empty input: Make sure you've entered text or uploaded a file\n- File format: Check that you've selected the correct processing mode\n- Large files may take time to process\n\nIf problems persist, try refreshing the page or using a different browser.";
+        } else if (lowerMsg.includes('limit') || lowerMsg.includes('size') || lowerMsg.includes('maximum')) {
+          response = "There are no hard size limits for compression, but browser memory constraints may affect very large files (>100MB). For optimal performance, we recommend files under 10MB.";
+        } else if (lowerMsg.includes('hi') || lowerMsg.includes('hello')) {
+          response = "Hello! How can I help you with using this compression tool today? I can explain uploading files, choosing algorithms, or any other site features.";
+        } else {
+          // Updated fallback response
+          response = "Sorry, I only answer questions about how to use this tool or its features. Please ask about uploading files, selecting algorithms, buttons, downloading results, or supported file types.";
+        }
+        
+        return response;
+      }
+      
+      // Send message
+      function sendMessage() {
+        const message = chatInput.value.trim();
+        if (!message) return;
+        
+        // Add user message
+        const userMessageDiv = document.createElement('div');
+        userMessageDiv.className = 'user-message';
+        userMessageDiv.textContent = message;
+        chatMessages.appendChild(userMessageDiv);
+        
+        // Process and add bot response
+        const botResponse = processChat(message);
+        
+        setTimeout(() => {
+          const botMessageDiv = document.createElement('div');
+          botMessageDiv.className = 'bot-message';
+          botMessageDiv.textContent = botResponse;
+          chatMessages.appendChild(botMessageDiv);
+          
+          // Scroll to bottom
+          chatMessages.scrollTop = chatMessages.scrollHeight;
+        }, 500);
+        
+        // Clear input
+        chatInput.value = '';
+      }
+      
+      // Event listeners for chat
+      sendChat.addEventListener('click', sendMessage);
+      chatInput.addEventListener('keypress', function(e) {
+        if (e.key === 'Enter') {
+          sendMessage();
+        }
+      });
+      
+      // If you want to update the initial message, you can do so by changing the HTML or with JavaScript:
+      const initialMessage = document.querySelector('.bot-message');
+      if (initialMessage) {
+        initialMessage.textContent = "Hi! Ask me anything about using this site: uploading files, choosing algorithms, compressing/decompressing, or downloading results.";
+      }
+    });
+  </script>
+</body>
+</html>
